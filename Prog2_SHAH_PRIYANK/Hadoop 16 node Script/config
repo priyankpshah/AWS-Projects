@@ -1,0 +1,87 @@
+
+Host master
+  HostName ec2-54-175-146-89.compute-1.amazonaws.com
+  User ec2-user
+  IdentityFile ~/.ssh/Hadoop.pem
+
+Host slave1
+  HostName ec2-52-91-196-171.compute-1.amazonaws.com
+  User ec2-user
+  IdentityFile ~/.ssh/Hadoop.pem
+
+Host slave2
+  HostName ec2-54-209-130-31.compute-1.amazonaws.com
+  User ec2-user
+  IdentityFile ~/.ssh/Hadoop.pem
+
+Host slave3
+  HostName ec2-54-208-90-3.compute-1.amazonaws.com
+  User ec2-user
+  IdentityFile ~/.ssh/Hadoop.pem
+
+Host slave4
+  HostName ec2-52-91-77-101.compute-1.amazonaws.com
+  User ec2-user
+  IdentityFile ~/.ssh/Hadoop.pem
+
+Host slave5
+  HostName ec2-54-88-121-204.compute-1.amazonaws.com
+  User ec2-user
+  IdentityFile ~/.ssh/Hadoop.pem
+
+Host slave6
+  HostName ec2-52-90-200-73.compute-1.amazonaws.com
+  User ec2-user
+  IdentityFile ~/.ssh/Hadoop.pem
+
+Host slave7
+  HostName ec2-54-209-134-3.compute-1.amazonaws.com
+  User ec2-user
+  IdentityFile ~/.ssh/Hadoop.pem
+
+Host slave8
+  HostName ec2-54-209-74-245.compute-1.amazonaws.com
+  User ec2-user
+  IdentityFile ~/.ssh/Hadoop.pem
+
+Host slave9
+  HostName ec2-54-209-122-168.compute-1.amazonaws.com
+  User ec2-user
+  IdentityFile ~/.ssh/Hadoop.pem
+
+Host slave10
+  HostName ec2-54-209-153-7.compute-1.amazonaws.com
+  User ec2-user
+  IdentityFile ~/.ssh/Hadoop.pem
+
+Host slave11
+  HostName ec2-54-165-101-10.compute-1.amazonaws.com
+  User ec2-user
+  IdentityFile ~/.ssh/Hadoop.pem
+
+Host slave12
+  HostName ec2-54-174-44-242.compute-1.amazonaws.com
+  User ec2-user
+  IdentityFile ~/.ssh/Hadoop.pem
+
+Host slave13
+  HostName ec2-54-209-152-47.compute-1.amazonaws.com
+  User ec2-user
+  IdentityFile ~/.ssh/Hadoop.pem
+
+Host slave14
+  HostName ec2-52-207-220-171.compute-1.amazonaws.com
+  User ec2-user
+  IdentityFile ~/.ssh/Hadoop.pem
+
+Host slave15
+  HostName ec2-52-23-211-187.compute-1.amazonaws.com
+  User ec2-user
+  IdentityFile ~/.ssh/Hadoop.pem
+
+Host slave16
+  HostName ec2-54-209-150-189.compute-1.amazonaws.com
+  User ec2-user
+  IdentityFile ~/.ssh/Hadoop.pem
+
+

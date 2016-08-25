@@ -1,0 +1,62 @@
+import java.io.IOException;
+import java.util.StringTokenizer;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+
+/* Author: Priyank Shah
+ * CWID: A20344797
+ */
+//Rename this file to Terasort.java to Run
+public class Terasort {
+
+  public static class TSMapper extends Mapper<Object, Text, Text, Text>{
+    
+	private Text keyfile = new Text();
+   	private Text valuefile = new Text();
+
+    public void map(Object key,Text value,Context output) throws IOException, InterruptedException {
+
+        String f_key = (value.toString()).substring(1,10);
+        keyfile.set(f_key); //set 10 char as key 
+        String val = (value.toString()).substring(10);//fetching 11th char onwards as value from generated file
+        valuefile.set(val); 
+        output.write(keyfile,valuefile);    
+    }
+  }
+
+  public static class TSReducer extends Reducer<Text,Text,Text,Text> {
+   
+      private Text opval = new Text();
+      private Text opkey = new Text();
+
+    public void reduce(Text key, Iterable <Text> values,Context output) throws IOException, InterruptedException {
+      opkey = key;
+      for(Text val : values)
+      {
+          opval = val;
+      }
+      output.write(opkey,opval);
+    }
+}
+
+  public static void main(String[] args) throws Exception {
+    Configuration conf = new Configuration();
+    Job job = Job.getInstance(conf, "Tera sort");
+    job.setJarByClass(Terasort.class);
+    job.setMapperClass(TSMapper.class);
+    job.setCombinerClass(TSReducer.class);
+    job.setReducerClass(TSReducer.class);
+    job.setOutputKeyClass(Text.class);
+    job.setOutputValueClass(Text.class);
+    FileInputFormat.addInputPath(job, new Path(args[0]));
+    FileOutputFormat.setOutputPath(job, new Path(args[1]));
+    System.exit(job.waitForCompletion(true) ? 0 : 1);
+  }
+}

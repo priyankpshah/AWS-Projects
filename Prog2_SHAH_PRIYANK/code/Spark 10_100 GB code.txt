@@ -1,0 +1,16 @@
+
+#!/bin/sh
+exec scala "$0" "$@"
+!#
+object Terasort {
+  def main() {
+    	val input = sc.textFile("hdfs://MASTER_PUBLIC_DNS//user/root/input") 
+	val map_data = input.flatMap(line => line.split("\n")).map(word => (word.substring(0,10), word.substring(10))).sortByKey()
+	map_data.saveAsTextFile("hdfs://MASTER_PUBLIC_DNS:9000/output/")	
+  }
+}
+Terasort.main()
+
+
+
+

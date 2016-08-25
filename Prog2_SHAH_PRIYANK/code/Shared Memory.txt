@@ -1,0 +1,177 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package sharedmemory;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.TreeMap;
+
+
+/**
+ *
+ * @author priyankpshah
+ */
+public class SharedMemory extends Thread{
+    
+    /*It will cut data in chunk of (2000*100 byte) that is 20 MB, pass it to qcksort function so sort individual chunk and
+     *store it as temp file in system. Returns the Arraylist of  temp file.
+     */
+	SharedMemory(input,lw,hgh){
+	ArrayList<String> input = new ArrayList<String>();
+	this.input = input;
+	int low = lw;
+	int high = hgh;
+	}    
+	//File Read and create 20 MB Chunks
+
+	private static ArrayList<String> makePartition(String inputpath, int thno) throws IOException, InterruptedException {
+         int blk_size = 2000;
+         int file_cnt = 0;
+         ArrayList<String> tmpfilename = new ArrayList<String>();
+        try {
+            
+            FileReader fr = new FileReader(inputpath);
+            BufferedReader br = new BufferedReader(fr);
+            ArrayList<String> input = new ArrayList<String>();
+            ArrayList<String> intermid = new ArrayList<String>();
+            int low,high;
+            ExecutorService executorService = Executors.newFixedThreadPool[thno];
+            {
+		executorService.execute(new Runnable() {
+                t[i].start();
+		SharedMemory(input,low,high);
+		}
+		}
+             for (String temp; (temp = br.readLine()) != null;) {
+            int temp_blk = 1;
+                input.add(temp);
+                while(temp_blk < blk_size) {
+                    String temp1 = br.readLine();
+                    input.add(temp1);
+                    temp_blk++;
+               }
+                low=0;
+                high = input.size()-1;
+                tmpfilename.add(qckSort(input,low,high));
+                file_cnt = file_cnt +1;
+                input.clear();
+            }
+            executorService.shutdown();
+            
+            }
+} catch (FileNotFoundException fnf) {
+            fnf.printStackTrace(); }
+    return tmpfilename;
+    }
+	public void run(){
+	tmpfilename.add(qckSort(input,low,high));
+    
+	}
+    /*perform quicksort and store it in temp file, return the string contain temp file name.
+     * 
+     * 
+     */
+    private static String qckSort(ArrayList<String> input,int lowg,int highg) throws IOException {
+        int low=lowg , high =highg;
+        
+        String mid = input.get(low + (high - low) / 2).substring(0, 10);
+             
+        /*reference for string quicksort logic is:
+         * http://www.java2novice.com/java-sorting-algorithms/quick-sort/
+         * http://stackoverflow.com/questions/29294982/using-quicksort-on-a-string-array
+         */
+        while (low <= high) {
+            while (input.get(low).substring(0, 10).compareTo(mid) < 0) {
+                low++;
+                }
+            while (input.get(high).substring(0, 10).compareTo(mid) > 0) {
+                high--;
+                }
+            if (low <= high) {
+                    String ex = input.get(low);
+                    input.set(low,input.get(high));
+                    input.set(high,ex);
+                    low++;
+                    high--;
+           }
+        }
+         if (lowg < high) {
+            qckSort(input,lowg,high);
+        }
+        if (low < highg) {
+            qckSort(input,low, highg);
+        }
+        /*
+	 *Referenced Code ends here
+	 */
+        File f = File.createTempFile("tmp",null);
+        String filenames;
+        filenames = f.getName();
+        System.out.println("in qcksort filename:"+filenames);
+        f.deleteOnExit();
+        BufferedWriter bw = new BufferedWriter(new FileWriter(f));
+        for(String val :input){
+           bw.write(val);
+          bw.newLine(); }
+        bw.close();
+        return filenames;
+        
+}
+    /*
+     * Sort temp files and store it in final output path on given path.
+     */
+ private static void mergeIntermidFiles(ArrayList<String> tmpfilelist,String outpath) throws FileNotFoundException, IOException {
+     int filecnt = tmpfilelist.size();
+     Map<String, String>  intmap = new TreeMap<String,String>();
+     BufferedReader[] br = new BufferedReader[filecnt];
+     FileReader fr;
+     for(int i=0; i <filecnt;i++)
+     {
+         fr = new FileReader("/tmp/"+tmpfilelist.get(i));
+         System.out.println(fr);
+         br[i] = new BufferedReader(fr);
+         String frstline = br[i].readLine();
+         
+         if(frstline!= null){
+             String key_val = frstline.substring(0,10);
+             String val_val = frstline.substring(10);
+             intmap.put(key_val, val_val);
+         }
+     }
+     File foutp = new File(outpath);
+     if (!foutp.exists()) {
+	foutp.createNewFile();
+     }
+     FileWriter fw = new FileWriter(foutp.getAbsoluteFile());
+     BufferedWriter bw = new BufferedWriter(fw);
+	
+     for(Map.Entry<String,String> val : intmap.entrySet()) {
+         
+         String Val = val.getValue();
+        bw.write(val+"\n");
+        bw.flush();
+      }
+     bw.close();
+    }
+	// Main 
+    public static void main(String[] args) throws IOException, InterruptedException {
+        String inputpath = "/mnt/raid0/input";
+        String outputpath = "/mnt/raid0/output";
+        int thread = Integer.parseInt(args[0]);
+        ArrayList<String> tmpfilenamelist = new ArrayList<String>();
+        long Starttime = System.currentTimeMillis();
+        tmpfilenamelist = makePartition(inputpath,thread);
+        mergeIntermidFiles(tmpfilenamelist,outputpath);
+        long endtime = System.currentTimeMillis() - Starttime;
+        System.out.println("Total Elapsed Time:" + (double)endtime/1000);
+    }
+}

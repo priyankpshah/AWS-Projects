@@ -1,0 +1,193 @@
+﻿Source Code:
+
+1.Client.py
+
+import threading
+import time
+import Queue
+import argparse
+import os
+import boto.sqs
+from boto.sqs.message import Message, RawMessage
+from credential import AWS_ACCESS_KEY,AWS_KEY
+import random
+import boto.dynamodb
+
+class LocalWorker (threading.Thread):
+    def __init__(self,tID,name):
+        threading.Thread.__init__(self)
+        self.tID = tID
+        self.name = name
+
+    def run(self):
+        print self.tID, self.name
+        for i in f:
+            q.put(i)
+        while not q.empty():
+            data = q.get()
+            delay = data[6:]
+	    if(delay==0):
+               flag=1
+               task(self.name,data,flag)
+	    else:
+               flag=0 
+               task(self.name,int(delay)/1000.0,flag)
+
+										#Remote Worker - Table Created on DynamoDB , Send Data to SQS
+
+def remoteWorker(queueName,worker,WorkFile):
+
+    connection_ob = boto.connect_sqs(AWS_KEY,AWS_ACCESS_KEY)
+    connection = boto.connect_dynamodb(AWS_KEY,AWS_ACCESS_KEY)
+    myschema=connection.create_schema(hash_key_name='task_id',hash_key_proto_value='S')
+    queue = connection_ob.create_queue(queueName)
+    try:
+        print "Creating Table.."
+        table=connection.create_table(name='task_table', schema=myschema, read_units=100, write_units=100)
+        print "Table Created Successfully...."
+    except:
+        print "Table already exist"
+
+    msg = RawMessage()
+    f = open(WorkFile)
+
+    for line in iter(f):
+        rand = random.randrange(0,9999)
+        msg.set_body(line)
+        msg.message_attributes = {"Values": {
+                                            "data_type":"String",
+                                             "string_value":str(rand)
+                                             }
+                                        }
+        queue.write(msg)
+    f.close()
+    print "Data Inserted into Queue"
+
+										#Local Worker Sleep Task Execution Code
+
+def task(tname,delay,flag):
+	if(flag==1):
+	    os.system(delay)
+	else:
+	    time.sleep(delay)
+
+
+										#Taking Argument From User
+parser = argparse.ArgumentParser()
+parser.add_argument('-s','--queue',help='Local Worker')
+parser.add_argument('-t',"--thread",default=1,help='Number of Thread/Worker')
+parser.add_argument('-w',"--Work_File",help='Worker File Name')
+
+arg = parser.parse_args()
+										#Calling Local Worker	
+if(arg.queue == 'LOCAL'):
+
+    q = Queue.Queue()
+    f = open(arg.Work_File)
+    Start_time = time.time()
+
+    threads = []
+    for i in range(0,int(arg.thread)):
+        t = LocalWorker(i,"thread"+str(i))
+        t.start()
+        threads.append(t)
+
+    for k in threads:
+        k.join()
+
+    end_time = time.time() - Start_time
+    print "Execution Time: " + str(round(end_time,3)) + " Sec"
+										#Calling Remote Worker
+else:
+    Start_time = time.time()
+    filename = arg.Work_File
+    queue_name = arg.queue
+    worker_no = arg.thread
+    # obj = LocalWorker()
+    remoteWorker(queue_name,worker_no,filename)
+    end_time = time.time() - Start_time
+    print "Execution Time: " + str(round(end_time,3)) + " Sec"
+
+2. Worker.py
+
+import boto.sqs.queue
+from boto.sqs.message import Message,RawMessage
+from credential import AWS_ACCESS_KEY,AWS_KEY
+import time
+import argparse
+import boto.dynamodb
+import boto.ec2
+										#Taking User input
+parser = argparse.ArgumentParser()
+parser.add_argument('-s','--queue',help='Local Worker')
+parser.add_argument('-t',"--worker",default=1,help='Number of Thread/Worker')
+arg = parser.parse_args()
+instance = arg.worker
+connection_ob = boto.connect_sqs(AWS_KEY,AWS_ACCESS_KEY)
+										#EC-2 Instance t2.micro launching as per user requirements.
+ec2_conn = boto.ec2.connect_to_region("us-east-1",AWS_KEY,AWS_ACCESS_KEY) 	#Edit your AWS Credential in credentail.py file
+
+for i in range(0,instance):
+      ec2_conn.run_instances(
+           'ami-fc33c696',
+            key_name='Your Key NAME',					#Enter your Key name					
+            instance_type='t2.micro',
+            security_groups=['launch-wizard-12']
+        )
+
+queue = connection_ob.get_queue(arg.queue)
+queue.set_message_class(RawMessage)
+i=0
+							#Connection to DynamoDB, Retrive Message from Queue and Send to DynamoDB, Compare with Entry in Database
+start_time = time.time()
+while True:
+    dbconnection = boto.connect_dynamodb(AWS_KEY,AWS_ACCESS_KEY)
+    rs = queue.get_messages(message_attributes='Values')
+    if len(rs) != 0:
+        msg = rs[0]
+        id = rs[0].message_attributes['Values']['string_value']
+        f = msg.get_body()
+        try:						#Try-Catch Start
+        print "Connecting to Table...."
+        table = dbconnection.get_table('task_table')
+							#Delete Duplicate Message
+        if table.has_item(hash_key=id):
+            queue.delete_message(msg)			
+							#Execute Task        
+	else:
+            task_data={'task':f}
+            job=table.new_item(hash_key=id, attrs=task_data)
+            job.put()
+            print "Data inserted successfully into DynamoDB...."
+            duration = f[6:]
+            time.sleep(int(duration)*1.0/1000)
+            queue.delete_message(msg)
+
+        except:
+        print "Connection UnSuccessfull!!!"
+    else:
+        break
+
+end_time = time.time() - start_time
+print "Execution Time: " + str(round(end_time,3)) + " Sec"
+
+3. writer.py
+							#Take Argument from User for Task And Sleep Value
+import argparse
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-t','--task',help='Number of Tasks')
+parser.add_argument('-v',"--value",default=100,help='Sleep Value')
+arg = parser.parse_args()
+
+							#Write Into File
+f = open('Worker/data','w')
+for i in range(0,arg.task):
+    f.write('sleep\n'+arg.value)
+f.close()
+							#Store Access Key ID and Access Key.
+4.  credential.py
+
+AWS_KEY = 'AKIAJZRI7Z56V36NC7NQ'
+AWS_ACCESS_KEY = '7e5YUodwpyMy9YS68YwiJ1r4P+dTRlxlHgNmIBUP'
+
