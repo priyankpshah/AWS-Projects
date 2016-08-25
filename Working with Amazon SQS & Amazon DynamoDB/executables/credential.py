@@ -1,2 +1,2 @@
-AWS_KEY = 'AKIAJZRI7Z56V36NC7NQ'
-AWS_ACCESS_KEY = '7e5YUodwpyMy9YS68YwiJ1r4P+dTRlxlHgNmIBUP'
+AWS_KEY = 'Add your own'
+AWS_ACCESS_KEY = 'Add your own'
