@@ -188,6 +188,6 @@ f.close()
 							#Store Access Key ID and Access Key.
 4.  credential.py
 
-AWS_KEY = 'AKIAJZRI7Z56V36NC7NQ'
-AWS_ACCESS_KEY = '7e5YUodwpyMy9YS68YwiJ1r4P+dTRlxlHgNmIBUP'
+AWS_KEY = 'Key'
+AWS_ACCESS_KEY = 'Access_key'
 
